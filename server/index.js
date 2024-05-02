@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const { MongoClient } = require("mongodb");
 const cors = require('cors');
-
+const UserModel = require("./models/User")
 const app = express();
 
 app.use(cors());
@@ -26,6 +26,19 @@ MongoClient.connect(mongoURI)
     console.error("Error connecting to MongoDB:", error);
     process.exit(1); 
   });
+
+
+app.post("/register", (req,res) =>{
+   UserModel.create(req.body)
+   .then(users => res.json(users))
+   .catch(err => res.json(err))
+
+
+
+})
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
