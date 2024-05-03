@@ -2,40 +2,62 @@ const express = require("express");
 const dotenv = require("dotenv");
 const { MongoClient } = require("mongodb");
 const cors = require('cors');
-const UserModel = require("./models/User")
+
+const bodyParser = require('body-parser');
+
+const userRoutes = require("./routes/userroutes")
+
 const app = express();
+
+app.use(express.json())
 
 app.use(cors());
 
-const PORT = process.env.PORT || 5000;
+dotenv.config({ path: './config.env' });
+app.use(bodyParser.json());
 
-dotenv.config();
+const PORT = process.env.PORT || 5050;
 
 
 
 
-const mongoURI = "mongodb+srv://tani:poiuyt1234@cluster0.obzhyzv.mongodb.net/Exp";
-// const mongoURI = process.env.MONGO_URI
 
-MongoClient.connect(mongoURI)
+
+
+const mongoURI = process.env.MONGO_URI || "";
+
+MongoClient.connect(mongoURI, 
+  { 
+socketTimeoutMS: 5000})
   .then((client) => {
     console.log("MongoDB connected successfully");
-   
+    
   })
   .catch((error) => {
     console.error("Error connecting to MongoDB:", error);
-    process.exit(1); 
+    process.exit(1);
   });
 
-
-app.post("/register", (req,res) =>{
-   UserModel.create(req.body)
-   .then(users => res.json(users))
-   .catch(err => res.json(err))
+app.use("/users",userRoutes)
 
 
+// app.post("/register", (req,res) =>{
 
-})
+//   console.log("Request Body:", req.body);
+//   UserModel.create(req.body)
+//   .then(users => {
+//     console.log('User created successfully:', users);
+//     res.status(201).json(users);
+//   })
+//   .catch(err => {
+//     console.error('Error creating user:', err);
+//     res.status(500).json({ message: 'Error creating user' });
+//   });
+
+
+
+
+// })
 
 
 

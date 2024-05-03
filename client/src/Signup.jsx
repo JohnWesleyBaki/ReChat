@@ -9,10 +9,10 @@ function SignUp() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission, e.g., send data to backend
+
     console.log({ name, email, password });
     axios
-      .post("", { name, email, password })
+      .post("http://localhost:5000/users/register", { name, email, password })
       .then((result) => console.log(result))
       .catch((err) => console.log(err));
   };
