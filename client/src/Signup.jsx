@@ -12,13 +12,13 @@ function SignUp() {
 
     console.log({ name, email, password });
     axios
-      .post("http://localhost:5000/users/register", { name, email, password })
+      .post("http://localhost:5050/users/register", { name, email, password })
       .then((result) => console.log(result))
       .catch((err) => console.log(err));
   };
 
   return (
-    <div className="container">
+    <div className="container m-4 p-4">
       <div className="row justify-content-center">
         <div className="col-md-6">
           <form onSubmit={handleSubmit}>
