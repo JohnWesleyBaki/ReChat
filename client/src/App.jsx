@@ -1,19 +1,34 @@
 import { useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+
 import Signup from "./Signup";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Login from "./Login";
+import Home from "./Home";
+import ChatApp from "./components/ChatApp";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const isAuthenticated = !!localStorage.getItem("token");
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Signup></Signup>}></Route>
-        <Route path="/login" element={<Login></Login>}></Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Signup></Signup>}></Route>
+          <Route path="/login" element={<Login></Login>}></Route>
+          <Route path="/home" element={<Home />}></Route>
+          <Route
+            path="/chat"
+            element={isAuthenticated ? <ChatApp /> : <Navigate to="/login" />}
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
