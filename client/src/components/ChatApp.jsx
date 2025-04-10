@@ -3,6 +3,11 @@ import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../hooks/UseSocket";
 import { useChat } from "../hooks/UseChat";
 import { getContacts } from "../api/UserApi";
+import { MessageCircle } from "lucide-react";
+import ContactsSidebar from "./chat/ContactsSidebar";
+import ChatHeader from "./chat/ChatHeader";
+import MessageList from "./chat/MessageList";
+import MessageInput from "./chat/MessageInput";
 
 const ChatApp = () => {
   const { user } = useAuth();
@@ -12,6 +17,13 @@ const ChatApp = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
+
+  // Ensure user data is properly structured
+  const currentUser = {
+    email: user?.email || "",
+    id: user?.id || "",
+    name: user?.name || "",
+  };
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -42,91 +54,44 @@ const ChatApp = () => {
     }
   };
 
-  const currentMessages = selectedContact
+  const currentMessages = selectedContact?.chatId
     ? chats[selectedContact.chatId] || []
     : [];
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Contacts sidebar */}
-      <div className="w-1/4 bg-white border-r border-gray-200 overflow-y-auto">
-        <h2 className="text-xl font-semibold p-4 border-b border-gray-200">
-          Contacts
-        </h2>
-        {contacts.map((contact) => (
-          <div
-            key={contact._id}
-            className={`p-4 cursor-pointer hover:bg-gray-100 ${
-              selectedContact?._id === contact._id ? "bg-blue-100" : ""
-            }`}
-            onClick={() => handleStartChat(contact)}
-          >
-            {contact.name || contact.email}
-          </div>
-        ))}
-      </div>
+      <ContactsSidebar
+        contacts={contacts}
+        selectedContact={selectedContact}
+        onStartChat={handleStartChat}
+      />
 
-      {/* Chat window */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-white shadow-sm ml-5 rounded-l-2xl overflow-hidden">
         {selectedContact ? (
           <>
-            {/* Chat header */}
-            <div className="bg-white p-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold">
-                Chat with {selectedContact.name || selectedContact.email}
-              </h2>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {currentMessages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex ${
-                    msg.sender === user.email ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.sender === user.email
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 text-gray-800"
-                    }`}
-                  >
-                    {msg.message}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Message input */}
-            <form
-              onSubmit={handleSendMessage}
-              className="bg-white p-4 border-t border-gray-200"
-            >
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Type a message..."
-                />
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Send
-                </button>
-              </div>
-            </form>
+            <ChatHeader selectedContact={selectedContact} />
+            <MessageList
+              messages={currentMessages}
+              user={currentUser}
+              messagesEndRef={messagesEndRef}
+            />
+            <MessageInput
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              handleSendMessage={handleSendMessage}
+            />
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-xl text-gray-500">
-              Select a contact to start chatting
-            </p>
+          <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-xl text-gray-500 font-medium">
+                Select a contact to start chatting
+              </p>
+              <p className="text-gray-400 mt-2">
+                Choose from your contacts list or start a new conversation
+              </p>
+            </div>
           </div>
         )}
       </div>
