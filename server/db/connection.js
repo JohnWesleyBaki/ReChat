@@ -1,42 +1,40 @@
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const dotenv = require("dotenv");
+const mongoose = require('mongoose');
+const config = require('../config/config.js')
 
+const { uri, options } = config.db;
 
-dotenv.config({ path: './config.env' });
+// Connection function with retry logic
+const connectWithRetry = () => {
+  console.log('Attempting to connect to MongoDB...');
+  
+  mongoose.connect(uri, options)
+    .then(() => {
+      console.log('Successfully connected to MongoDB.');
+    })
+    .catch((err) => {
+      console.error('Error connecting to MongoDB:', err);
+      console.log('Retrying connection in 5 seconds...');
+      setTimeout(connectWithRetry, 5000); // Retry after 5 seconds
+    });
+};
 
-const URI = process.env.MONGO_URI || "";
-
-
-const client = new MongoClient(URI, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+// Handle connection errors
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
 });
 
+// Handle disconnection
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+});
 
-async function connectToDatabase() {
-  try {
-    
-    await client.connect();
+// Handle reconnection
+mongoose.connection.on('reconnected', () => {
+  console.log('MongoDB reconnected successfully.');
+});
 
-    
-    await client.db("admin").command({ ping: 1 });
+// Initial connection attempt
+connectWithRetry();
 
-   
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } catch (err) {
-    
-    console.error(err);
-   
-  }
-}
-
-
-connectToDatabase();
-
-
-const db = client.db("users");
-module.exports = db;
+module.exports = mongoose.connection;

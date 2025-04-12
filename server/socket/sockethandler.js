@@ -1,16 +1,29 @@
-const { ObjectId } = require('mongodb');
-const db = require('../db/connection.js');
+const { Chat, findByUserId, addMessage } = require('../models/chat');
+const User = require('../models/user');
 
 const setupSocketHandlers = (io) => {
   io.on('connection', async (socket) => {
     console.log('New client connected:', socket.user.id, socket.user.email);
+    
+    // Update user status to online when they connect
+    try {
+      await User.updateById(socket.user.id, { status: 'online' });
+      // Broadcast to all clients that this user is now online
+      socket.user.status = 'online';
+      io.emit('userStatusChange', { userId: socket.user.id, status: 'online' });
+      console.log(`${socket.user.email} is now ${socket.user.status}`);
+    } catch (error) {
+      console.error('Error updating user status to online:', error);
+    }
 
     try {
       // Send chat history when a user connects
-      const chatsCollection = db.collection('chats');
-      const userChats = await chatsCollection.find({ 
-        participants: new ObjectId(socket.user.id) 
-      }).toArray();
+      const userChats = await findByUserId(socket.user.id)
+        .catch(error => {
+          console.error('Error fetching chat history:', error);
+          socket.emit('error', { message: 'Failed to load chat history' });
+          return null;
+        });
 
       if (userChats) {
         socket.emit('chatHistory', userChats);
@@ -49,40 +62,45 @@ const setupSocketHandlers = (io) => {
         }
 
         const messageData = {
-          sender: socket.user.email,
-          senderId: socket.user.id,
-          message: message,
-          timestamp: new Date(),
+          sender: socket.user.id,
+          content: message,
+          timestamp: new Date()
         };
 
         try {
-          const result = await chatsCollection.updateOne(
-            { _id: new ObjectId(chatId) },
-            { $push: { messages: messageData } }
-          );
-
-          if (result.modifiedCount === 1) {
-            const chat = await chatsCollection.findOne({ _id: new ObjectId(chatId) });
-            
-            if (chat && chat.participants) {
-              io.to(chatId).emit('chatMessage', {
-                chatId,
-                ...messageData
-              });
-              console.log(`Message delivered to room ${chatId}`);
-            } else {
-              console.error('Chat not found or no participants');
-            }
+          const updatedChat = await addMessage(chatId, messageData)
+            .catch(error => {
+              console.error('Error saving message:', error);
+              socket.emit('error', { message: 'Failed to save message' });
+              return null;
+            });
+          
+          if (updatedChat) {
+            io.to(chatId).emit('chatMessage', {
+              chatId,
+              ...messageData
+            });
+            console.log(`Message delivered to room ${chatId}`);
           } else {
-            console.error('Failed to save message to database');
+            socket.emit('error', { message: 'Failed to process message' });
           }
         } catch (error) {
           console.error('Error handling message:', error);
+          socket.emit('error', { message: 'Failed to send message' });
         }
       });
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', async () => {
         console.log('Client disconnected:', socket.user.email);
+        
+        // Update user status to offline when they disconnect
+        try {
+          await User.updateById(socket.user.id, { status: 'offline' });
+          // Broadcast to all clients that this user is now offline
+          io.emit('userStatusChange', { userId: socket.user.id, status: 'offline' });
+        } catch (error) {
+          console.error('Error updating user status to offline:', error);
+        }
       });
     } catch (error) {
       console.error('Error handling connection:', error);

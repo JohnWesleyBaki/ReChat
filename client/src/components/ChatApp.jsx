@@ -5,9 +5,9 @@ import { useChat } from "../hooks/UseChat";
 import { getContacts } from "../api/UserApi";
 import { MessageCircle } from "lucide-react";
 import ContactsSidebar from "./chat/ContactsSidebar";
-import ChatHeader from "./chat/ChatHeader";
-import MessageList from "./chat/MessageList";
-import MessageInput from "./chat/MessageInput";
+import ChatHeader from "./chat/chatheader";
+import MessageList from "./chat/messagelist";
+import MessageInput from "./chat/messageinput";
 
 const ChatApp = () => {
   const { user } = useAuth();
@@ -28,8 +28,9 @@ const ChatApp = () => {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        const fetchedContacts = await getContacts();
+        const fetchedContacts = await getContacts(user.id);
         setContacts(fetchedContacts);
+        console.log("Fetched contacts:", fetchedContacts);
       } catch (error) {
         console.error("Error fetching contacts:", error);
       }

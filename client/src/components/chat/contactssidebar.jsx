@@ -56,7 +56,7 @@ const ContactsSidebar = ({ contacts, selectedContact, onStartChat }) => {
               </div>
               <div
                 className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
-                  contact.online ? "bg-green-500" : "bg-gray-300"
+                  contact.status === "online" ? "bg-green-500" : "bg-gray-300"
                 }`}
               />
             </div>

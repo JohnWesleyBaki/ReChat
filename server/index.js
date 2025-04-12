@@ -1,11 +1,14 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const mongooseConnection = require("./db/connection.js");
 
-// Load environment variables
-dotenv.config({ path: "./config.env" });
+// Import configuration
+const config = require('./config/config.js')
+
+// Get configuration values
+const corsOptions = config.cors
 
 // Initialize Express app
 const app = express();
@@ -13,22 +16,19 @@ const server = http.createServer(app);
 
 // Configure CORS for Socket.io
 const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Authorization","Content-Type"],
-    credentials: true,
-  },
+  cors: 
+    corsOptions,
+  
 });
 
 // Import routes and middleware
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const { socketAuth,authenticate } = require("./middleware/authmiddleware");
-const setupSocketHandlers = require("./socket/sockethandler");
+const setupSocketHandlers = require("./socket/socketHandler");
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -45,7 +45,7 @@ io.use(socketAuth);
 setupSocketHandlers(io);
 
 // Start server
-const PORT = process.env.PORT || 5050;
+const PORT = config.port;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} in ${config.nodeEnv} mode`);
 });

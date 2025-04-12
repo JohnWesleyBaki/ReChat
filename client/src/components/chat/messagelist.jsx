@@ -2,7 +2,8 @@ import React from "react";
 
 const MessageList = ({ messages = [], user = {}, messagesEndRef }) => {
   // Add null checks and default values
-  const userEmail = user?.email || "";
+
+  const userId = user?.id || "";
 
   if (!messages || messages.length === 0) {
     return <div className="flex-1 p-4 text-gray-500">No messages yet</div>;
@@ -11,7 +12,7 @@ const MessageList = ({ messages = [], user = {}, messagesEndRef }) => {
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
       {messages.map((msg, index) => {
-        const isCurrentUser = msg.sender === userEmail;
+        const isCurrentUser = msg.sender === userId;
 
         return (
           <div
@@ -27,7 +28,7 @@ const MessageList = ({ messages = [], user = {}, messagesEndRef }) => {
                   : "bg-white text-gray-800 rounded-bl-none"
               }`}
             >
-              <div className="break-words">{msg.message}</div>
+              <div className="break-words">{msg.content}</div>
               <div
                 className={`text-xs mt-1 ${
                   isCurrentUser ? "text-blue-100" : "text-gray-400"

@@ -4,6 +4,7 @@ import { useAuth } from "./context/AuthContext";
 import Signup from "./components/Signup";
 import Login from "./components/Login";
 import Home from "./Home";
+import RandomChat from "./components/RandomChat";
 
 function App() {
   const navigate = useNavigate();
@@ -71,6 +72,12 @@ function App() {
           <Route
             path="/"
             element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/random/chat"
+            element={
+              isAuthenticated ? <RandomChat /> : <Navigate to="/login" />
+            }
           />
         </Routes>
       </main>

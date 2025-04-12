@@ -13,8 +13,7 @@ module.exports = {
   db: {
     uri: process.env.MONGO_URI || 'mongodb://localhost:27017/users',
     options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+      // Removed deprecated options that are no longer needed in MongoDB Driver 4.0.0+
     }
   },
   
